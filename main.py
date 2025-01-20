@@ -120,6 +120,7 @@ layout (location = 0) in vec2 position;
 
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
+    gl_PointSize = 10.0;
 }
 """
 
@@ -177,6 +178,8 @@ def main():
     glBindBuffer(GL_ARRAY_BUFFER, ssbo)
     glEnableVertexAttribArray(0)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, None)
+
+    glEnable(GL_PROGRAM_POINT_SIZE)
 
     time = 0.0
     # Main loop
