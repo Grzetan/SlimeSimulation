@@ -13,7 +13,7 @@ void main() {
     }
 
     vec4 color = vec4(0.0);
-    int blurSize = 9;
+    int blurSize = 1;
     int count = 0;
 
     for (int x = -blurSize; x <= blurSize; x++) {
@@ -27,5 +27,6 @@ void main() {
     }
 
     color /= float(count);
+    color.xyz -= vec3(0.0001);
     imageStore(outputTexture, pixelCoord, color);
 }

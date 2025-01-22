@@ -63,7 +63,10 @@ def fill_uniforms(
     glUseProgram(agent_compute_program)
     glUniform1ui(ssbo_size_location, input_data["ssboSize"])
 
-    return {"ssboSize": ssbo_size_location}
+    time_location = glGetUniformLocation(agent_compute_program, "time")
+    glUseProgram(agent_compute_program)
+    glUniform1ui(time_location, input_data["time"])
+    return {"ssboSize": ssbo_size_location, "time": time_location}
 
 
 def main():
@@ -83,9 +86,16 @@ def main():
 
     # Create SSBO
     ssbo_data = np.array(
-        [[300, 100], [200, 200], [300, 300], [400, 400], [500, 500]]
+        [
+            [100.0, 100.0, 0, 0],
+            [200.0, 200.0, 0, 0],
+            [300.0, 300.0, 3.14, 0],
+            [400.0, 400.0, 0.9, 0],
+            [500.0, 500.0, 0.9, 0],
+        ]
     ).astype(np.float32)
     ssbo = bind_ssbo(ssbo_data)
+    num_groups_x = (ssbo_data.shape[0] + 8 - 1) // 8
 
     textures = create_textures()
 
@@ -95,22 +105,23 @@ def main():
         agent_compute_program,
         blur_compute_program,
         render_program,
-        {"ssboSize": ssbo_data.shape[0]},
+        {"ssboSize": ssbo_data.shape[0], "time": 0},
     )
 
+    time = 0
     while not glfw.window_should_close(window):
-        # Use compute shader to draw and update agents
-        glUseProgram(agent_compute_program)
-        glBindImageTexture(0, textures[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
-        num_groups_x = (max(ssbo_data.shape[0], 1) + 8 - 1) // 8
-        glDispatchCompute(num_groups_x, 1, 1)
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
-
-        # Optional: Execute the second compute shader
+        # Blur the texture
         glUseProgram(blur_compute_program)
         glBindImageTexture(0, textures[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F)
         glBindImageTexture(1, textures[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
         glDispatchCompute(num_groups_x_blur, num_groups_y_blur, 1)
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
+
+        # Use compute shader to draw and update agents
+        glUseProgram(agent_compute_program)
+        glUniform1ui(uniforms["time"], time)
+        glBindImageTexture(1, textures[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
+        glDispatchCompute(num_groups_x, 1, 1)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
 
         # Render the texture to the screen
@@ -121,6 +132,7 @@ def main():
         textures = textures[::-1]
         glfw.swap_buffers(window)
         glfw.poll_events()
+        time += 1
 
     # Cleanup
     glDeleteProgram(agent_compute_program)
