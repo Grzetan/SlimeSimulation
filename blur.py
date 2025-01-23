@@ -69,6 +69,18 @@ def fill_uniforms(
     return {"ssboSize": ssbo_size_location, "time": time_location}
 
 
+def create_agents():
+    agent_size = 100
+    agents = np.zeros((agent_size, 4), dtype=np.float32)
+    for i in range(agent_size):
+        agents[i, 0] = np.random.uniform(width / 2 - 50, width / 2 + 50)  # x position
+        agents[i, 1] = np.random.uniform(height / 2 - 50, height / 2 + 50)  # y position
+        dx = width / 2 - agents[i, 0]
+        dy = height / 2 - agents[i, 1]
+        agents[i, 2] = np.arctan2(dy, dx)  # direction facing the middle
+    return agents
+
+
 def main():
     # Initialize GLFW
     if not glfw.init():
@@ -85,15 +97,7 @@ def main():
     glfw.make_context_current(window)
 
     # Create SSBO
-    ssbo_data = np.array(
-        [
-            [100.0, 100.0, 0, 0],
-            [200.0, 200.0, 0, 0],
-            [300.0, 300.0, 3.14, 0],
-            [400.0, 400.0, 0.9, 0],
-            [500.0, 500.0, 0.9, 0],
-        ]
-    ).astype(np.float32)
+    ssbo_data = create_agents()
     ssbo = bind_ssbo(ssbo_data)
     num_groups_x = (ssbo_data.shape[0] + 8 - 1) // 8
 

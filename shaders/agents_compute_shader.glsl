@@ -13,10 +13,14 @@ layout (std430, binding = 0) buffer SSBO {
 
 uniform uint ssboSize;
 uniform uint time;
+float sensorAngleRad = 30 * (3.1415 / 180.0);
+uint sensorSize = 5;
+uint sensorOffset = 5;
+float turnSpeed = 90 * (3.1415 / 180.0);
 
 layout (rgba32f, binding = 1) uniform image2D outputTexture;
 
-uint random(uint state)
+float random(uint state)
 {
     state ^= 2747636419u;
     state *= 2654435769u;
@@ -24,7 +28,26 @@ uint random(uint state)
     state *= 2654435769u;
     state ^= state >> 16;
     state *= 2654435769u;
-    return state;
+    return state / 4294967295.0;
+}
+
+float sense(Agent agent, float sensorOffset, vec2 imageSize){
+    vec2 direction = vec2(cos(agent.angle + sensorOffset), sin(agent.angle + sensorOffset));
+    vec2 sensorCenter = agent.position + direction * sensorOffset;
+
+    float weight = 0.0;
+    for (uint i=-sensorSize; i <= sensorSize; i++) {
+        for(uint j=-sensorSize; j<=sensorSize; j++) {
+            vec2 sensorPos = sensorCenter + vec2(i, j);
+            // if (sensorPos.x >= 0.0 && sensorPos.x < imageSize.x && sensorPos.y >= 0.0 && sensorPos.y < imageSize.y) {
+            //     vec4 color = imageLoad(outputTexture, ivec2(sensorPos));
+            //     weight += color.x;
+            // }
+            vec4 color = imageLoad(outputTexture, ivec2(sensorPos));
+            weight += color.x;
+        }
+    }
+    return weight;
 }
 
 void main() {
@@ -34,29 +57,34 @@ void main() {
     }
 
     Agent agent = ssbo.agents[index];
+    vec2 pos = agent.position;
+    vec2 imageSize = vec2(imageSize(outputTexture));
+
+    float rand = random(time + index);
+
+    float weightForward = sense(agent, 0.0, imageSize);
+    float weightLeft = sense(agent, sensorAngleRad, imageSize);
+    float weightRight = sense(agent, -sensorAngleRad, imageSize);
+
+    //agent.angle -= turnSpeed;
+    if (weightForward > weightLeft && weightForward > weightRight) {
+        agent.angle += 0.0;
+    }else if (weightRight > weightLeft) {
+        agent.angle -= turnSpeed;
+    }else if (weightLeft > weightRight) {
+        agent.angle += turnSpeed;
+    }
+
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
     agent.position += direction;
 
-    ivec2 imageSize = imageSize(outputTexture);
     if (agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
-        agent.angle = float(random(time + index)) / 4294967295.0 * 2.0 * 3.1415;
-        agent.position.x = min(imageSize.x-1,max(0, agent.position.x));
-        agent.position.y = min(imageSize.y-1,max(0, agent.position.y));
+        agent.angle = rand * 2.0 * 3.1415;
+        agent.position.x = min(imageSize.x - 1, max(0, agent.position.x));
+        agent.position.y = min(imageSize.y - 1, max(0, agent.position.y));
     }
 
     ssbo.agents[index] = agent;
 
-    // Draw agent
-    int agentSize = 1;
-    for (int x = -agentSize; x <= agentSize; x++) {
-        for (int y = -agentSize; y <= agentSize; y++) {
-            ivec2 coord = ivec2(agent.position) + ivec2(x, y);
-            
-            if (coord.x < 0 || coord.x >= imageSize.x || coord.y < 0 || coord.y >= imageSize.y) {
-                continue;
-            }
-
-            imageStore(outputTexture, coord, vec4(1.0, 1.0, 1.0, 1.0));
-        }
-    }
+    imageStore(outputTexture, ivec2(agent.position), vec4(1.0, 1.0, 1.0, 1.0));
 }
