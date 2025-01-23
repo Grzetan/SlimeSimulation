@@ -70,14 +70,19 @@ def fill_uniforms(
 
 
 def create_agents():
-    agent_size = 100
+    agent_size = 200000
     agents = np.zeros((agent_size, 4), dtype=np.float32)
+    radius = 300
+    center_x, center_y = width / 2, height / 2
+
     for i in range(agent_size):
-        agents[i, 0] = np.random.uniform(width / 2 - 50, width / 2 + 50)  # x position
-        agents[i, 1] = np.random.uniform(height / 2 - 50, height / 2 + 50)  # y position
-        dx = width / 2 - agents[i, 0]
-        dy = height / 2 - agents[i, 1]
-        agents[i, 2] = np.arctan2(dy, dx)  # direction facing the middle
+        angle = np.random.uniform(0, 2 * np.pi)
+        r = radius * np.sqrt(np.random.uniform(0, 1))
+        agents[i, 0] = center_x + r * np.cos(angle)
+        agents[i, 1] = center_y + r * np.sin(angle)
+        dx = center_x - agents[i, 0]
+        dy = center_y - agents[i, 1]
+        agents[i, 2] = np.arctan2(dy, dx)
     return agents
 
 
@@ -124,7 +129,8 @@ def main():
         # Use compute shader to draw and update agents
         glUseProgram(agent_compute_program)
         glUniform1ui(uniforms["time"], time)
-        glBindImageTexture(1, textures[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
+        glBindImageTexture(1, textures[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F)
+        glBindImageTexture(2, textures[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
         glDispatchCompute(num_groups_x, 1, 1)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
 

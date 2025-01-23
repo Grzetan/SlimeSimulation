@@ -13,12 +13,13 @@ layout (std430, binding = 0) buffer SSBO {
 
 uniform uint ssboSize;
 uniform uint time;
-float sensorAngleRad = 30 * (3.1415 / 180.0);
-uint sensorSize = 5;
-uint sensorOffset = 5;
-float turnSpeed = 90 * (3.1415 / 180.0);
+float sensorAngleRad = 20 * 0.0174533;
+int sensorSize = 1;
+uint sensorLength = 5;
+float turnSpeed = 5 * 0.0174533;
 
-layout (rgba32f, binding = 1) uniform image2D outputTexture;
+layout (rgba32f, binding = 1) uniform image2D inputTexture;
+layout (rgba32f, binding = 2) uniform image2D outputTexture;
 
 float random(uint state)
 {
@@ -33,18 +34,14 @@ float random(uint state)
 
 float sense(Agent agent, float sensorOffset, vec2 imageSize){
     vec2 direction = vec2(cos(agent.angle + sensorOffset), sin(agent.angle + sensorOffset));
-    vec2 sensorCenter = agent.position + direction * sensorOffset;
+    vec2 sensorCenter = agent.position + direction * sensorLength;
 
     float weight = 0.0;
-    for (uint i=-sensorSize; i <= sensorSize; i++) {
-        for(uint j=-sensorSize; j<=sensorSize; j++) {
+    for (int i=-sensorSize; i <= sensorSize; i++) {
+        for(int j=-sensorSize; j<=sensorSize; j++) {
             vec2 sensorPos = sensorCenter + vec2(i, j);
-            // if (sensorPos.x >= 0.0 && sensorPos.x < imageSize.x && sensorPos.y >= 0.0 && sensorPos.y < imageSize.y) {
-            //     vec4 color = imageLoad(outputTexture, ivec2(sensorPos));
-            //     weight += color.x;
-            // }
-            vec4 color = imageLoad(outputTexture, ivec2(sensorPos));
-            weight += color.x;
+            vec4 color = imageLoad(inputTexture, ivec2(sensorPos));
+            weight += color.r;
         }
     }
     return weight;
@@ -66,10 +63,7 @@ void main() {
     float weightLeft = sense(agent, sensorAngleRad, imageSize);
     float weightRight = sense(agent, -sensorAngleRad, imageSize);
 
-    //agent.angle -= turnSpeed;
-    if (weightForward > weightLeft && weightForward > weightRight) {
-        agent.angle += 0.0;
-    }else if (weightRight > weightLeft) {
+    if (weightRight > weightLeft) {
         agent.angle -= turnSpeed;
     }else if (weightLeft > weightRight) {
         agent.angle += turnSpeed;
