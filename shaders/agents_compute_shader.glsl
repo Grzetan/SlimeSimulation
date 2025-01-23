@@ -16,7 +16,8 @@ uniform uint time;
 float sensorAngleRad = 20 * 0.0174533;
 int sensorSize = 1;
 uint sensorLength = 5;
-float turnSpeed = 5 * 0.0174533;
+float timeSpeed = 1;
+float turnSpeed = 5 * 0.0174533 * timeSpeed;
 
 layout (rgba32f, binding = 1) uniform image2D inputTexture;
 layout (rgba32f, binding = 2) uniform image2D outputTexture;
@@ -63,14 +64,22 @@ void main() {
     float weightLeft = sense(agent, sensorAngleRad, imageSize);
     float weightRight = sense(agent, -sensorAngleRad, imageSize);
 
-    if (weightRight > weightLeft) {
+    if(weightForward > weightRight && weightForward > weightLeft) {
+        agent.position += 0.0;
+    }else if(weightForward < weightRight && weightForward < weightLeft) {
+        if(rand > 0.5) {
+            agent.angle -= turnSpeed;
+        } else {
+            agent.angle += turnSpeed;
+        }
+    }else if (weightRight > weightLeft) {
         agent.angle -= turnSpeed;
     }else if (weightLeft > weightRight) {
         agent.angle += turnSpeed;
     }
 
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
-    agent.position += direction;
+    agent.position += direction * timeSpeed;
 
     if (agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
         agent.angle = rand * 2.0 * 3.1415;

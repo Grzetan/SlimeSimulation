@@ -5,8 +5,8 @@ import numpy as np
 
 local_size_x = 16
 local_size_y = 16
-width = 800
-height = 600
+width = 1920
+height = 1080
 num_groups_x_blur = (width + local_size_x - 1) // local_size_x
 num_groups_y_blur = (height + local_size_y - 1) // local_size_y
 
@@ -36,7 +36,9 @@ def create_textures():
     textures = glGenTextures(2)
     for tex in textures:
         glBindTexture(GL_TEXTURE_2D, tex)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 800, 600, 0, GL_RGBA, GL_FLOAT, None)
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, None
+        )
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     return textures
@@ -70,7 +72,7 @@ def fill_uniforms(
 
 
 def create_agents():
-    agent_size = 200000
+    agent_size = 500000
     agents = np.zeros((agent_size, 4), dtype=np.float32)
     radius = 300
     center_x, center_y = width / 2, height / 2

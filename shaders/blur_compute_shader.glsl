@@ -5,7 +5,7 @@ layout (rgba32f, binding = 0) uniform image2D inputTexture;
 layout (rgba32f, binding = 1) uniform image2D outputTexture;
 
 int blurSize = 1;
-float decayRate = 0.995;
+float decayRate = 0.98;
 
 void main() {
     ivec2 texSize = imageSize(inputTexture);
