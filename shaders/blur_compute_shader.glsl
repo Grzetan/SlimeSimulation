@@ -3,15 +3,21 @@ layout (local_size_x = 16, local_size_y = 16) in;
 
 layout (rgba32f, binding = 0) uniform image2D inputTexture;
 layout (rgba32f, binding = 1) uniform image2D outputTexture;
+layout (r8, binding = 3) uniform image2D backgroundTexture;
 
 int blurSize = 1;
-float decayRate = 0.98;
+float decayRate = 0.995; // 0.98
 
 void main() {
     ivec2 texSize = imageSize(inputTexture);
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
 
     if (pixelCoord.x >= texSize.x || pixelCoord.y >= texSize.y) {
+        return;
+    }
+
+    float is_valid_position = imageLoad(backgroundTexture, ivec2(pixelCoord)).r;
+    if(is_valid_position == 0) {
         return;
     }
 

@@ -7,8 +7,8 @@ import time as timelib
 
 local_size_x = 16
 local_size_y = 16
-width = 800
-height = 600
+width = 1920
+height = 1080
 num_groups_x_blur = (width + local_size_x - 1) // local_size_x
 num_groups_y_blur = (height + local_size_y - 1) // local_size_y
 
@@ -83,7 +83,7 @@ def fill_uniforms(
 
 
 def create_agents(background):
-    agent_size = 5000
+    agent_size = 100000
     agents = np.zeros((agent_size, 4), dtype=np.float32)
 
     # Get indices of non-black pixels (background != 0)
@@ -121,7 +121,7 @@ def main():
 
     glfw.make_context_current(window)
 
-    background = Image.open("mandelbrot.jpg").convert("L")
+    background = Image.open("mask2.png").convert("L")
     background = background.resize((width, height))
     background = background.transpose(Image.FLIP_TOP_BOTTOM)
     background_data = np.array(background, dtype=np.uint8)
@@ -148,6 +148,7 @@ def main():
         glUseProgram(blur_compute_program)
         glBindImageTexture(0, textures[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F)
         glBindImageTexture(1, textures[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
+        glBindImageTexture(3, background_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8)
         glDispatchCompute(num_groups_x_blur, num_groups_y_blur, 1)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
 
@@ -169,7 +170,7 @@ def main():
         glfw.swap_buffers(window)
         glfw.poll_events()
         time += 1
-        input()
+        # input()
 
     # Cleanup
     glDeleteProgram(agent_compute_program)
