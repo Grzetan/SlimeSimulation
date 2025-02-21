@@ -21,6 +21,7 @@ float turnSpeed = 5 * 0.0174533 * timeSpeed;
 
 layout (rgba32f, binding = 1) uniform image2D inputTexture;
 layout (rgba32f, binding = 2) uniform image2D outputTexture;
+layout (r8, binding = 3) uniform image2D backgroundTexture;
 
 float random(uint state)
 {
@@ -79,13 +80,20 @@ void main() {
     }
 
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
+    vec2 oldPosition = agent.position;
     agent.position += direction * timeSpeed;
-
-    if (agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
+    
+    float is_valid_position = imageLoad(backgroundTexture, ivec2(agent.position)).r;
+    if(is_valid_position == 0) {
         agent.angle = rand * 2.0 * 3.1415;
-        agent.position.x = min(imageSize.x - 1, max(0, agent.position.x));
-        agent.position.y = min(imageSize.y - 1, max(0, agent.position.y));
+        agent.position = oldPosition;
     }
+
+    // if (agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
+    //     agent.angle = rand * 2.0 * 3.1415;
+    //     agent.position.x = min(imageSize.x - 1, max(0, agent.position.x));
+    //     agent.position.y = min(imageSize.y - 1, max(0, agent.position.y));
+    // }
 
     ssbo.agents[index] = agent;
 
