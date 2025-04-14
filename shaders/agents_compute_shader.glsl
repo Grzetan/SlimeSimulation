@@ -84,7 +84,7 @@ void main() {
     agent.position += direction * timeSpeed;
     
     float is_valid_position = imageLoad(backgroundTexture, ivec2(agent.position)).r;
-    if(is_valid_position != 0.87058823529) {
+    if(abs(is_valid_position - 0.87058823529) > 0.001) {
         agent.angle = rand * 2.0 * 3.1415;
         agent.position = oldPosition;
     }

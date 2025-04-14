@@ -11,14 +11,15 @@ void main() {
     ivec2 pixelCoord = ivec2(fragTexCoord * texSize);
     pixelCoord = clamp(pixelCoord, ivec2(0), texSize - 1); 
     vec4 texelValue = imageLoad(backgroundTexture, pixelCoord);
-    if(texelValue.r == 0.87058823529){
+    if(abs(texelValue.r - 0.87058823529) < 0.00001){
+        outColor = vec4(1.0, 0.0, 0.0, 1.0);
         vec4 color = texture(inputTexture, fragTexCoord);
         if(color == vec4(1.0)){
-            outColor = color; // can change to other color to visualize agents
+            outColor = vec4(1.0 - color.x, 1.0 - color.y, 1.0 - color.z, 1.0); // can change to other color to visualize agents
         } else {
-            outColor = color;
+            outColor = vec4(1.0 - color.x, 1.0 - color.y, 1.0 - color.z, 1.0);
         }
     }else{
-        outColor = vec4(texelValue.r, texelValue.r, texelValue.r, 1.0);
+        outColor = vec4(1.0 - texelValue.r, 1.0 - texelValue.r, 1.0 - texelValue.r, 1.0);
     }
 }

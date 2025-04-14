@@ -7,7 +7,7 @@ import time as timelib
 
 local_size_x = 16
 local_size_y = 16
-width = 1920
+width = 600
 height = 1080
 num_groups_x_blur = (width + local_size_x - 1) // local_size_x
 num_groups_y_blur = (height + local_size_y - 1) // local_size_y
@@ -83,11 +83,11 @@ def fill_uniforms(
 
 
 def create_agents(background):
-    agent_size = 100000
+    agent_size = 60000
     agents = np.zeros((agent_size, 4), dtype=np.float32)
 
     # Get indices of non-black pixels (background != 0)
-    non_black_y, non_black_x = np.where(background != 0)
+    non_black_y, non_black_x = np.where(background == 222)
     if len(non_black_x) == 0:
         raise ValueError("No non-black pixels found in the background mask.")
 
@@ -121,7 +121,7 @@ def main():
 
     glfw.make_context_current(window)
 
-    background = Image.open("mask.png").convert("L")
+    background = Image.open("tattoomask2.png").convert("L")
     background = background.resize((width, height))
     background = background.transpose(Image.FLIP_TOP_BOTTOM)
     background_data = np.array(background, dtype=np.uint8)
