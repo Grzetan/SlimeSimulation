@@ -121,7 +121,7 @@ def main():
 
     glfw.make_context_current(window)
 
-    background = Image.open("mask2.png").convert("L")
+    background = Image.open("mask.png").convert("L")
     background = background.resize((width, height))
     background = background.transpose(Image.FLIP_TOP_BOTTOM)
     background_data = np.array(background, dtype=np.uint8)
@@ -164,6 +164,7 @@ def main():
         # Render the texture to the screen
         glUseProgram(render_program)
         glBindTexture(GL_TEXTURE_2D, textures[0])
+        glBindImageTexture(1, background_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
 
         textures = textures[::-1]
