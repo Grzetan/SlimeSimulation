@@ -13,11 +13,11 @@ layout (std430, binding = 0) buffer SSBO {
 
 uniform uint ssboSize;
 uniform uint time;
-float sensorAngleRad = 20 * 0.0174533;
-int sensorSize = 1;
-uint sensorLength = 5;
-float timeSpeed = 1;
-float turnSpeed = 5 * 0.0174533 * timeSpeed;
+float sensorAngleRad = 30 * 0.0174533;
+int sensorSize = 4;
+uint sensorLength = 9;
+float timeSpeed = 2;
+float turnSpeed = 3 * 0.0174533 * timeSpeed;
 
 layout (rgba32f, binding = 1) uniform image2D inputTexture;
 layout (rgba32f, binding = 2) uniform image2D outputTexture;
@@ -84,16 +84,10 @@ void main() {
     agent.position += direction * timeSpeed;
     
     float is_valid_position = imageLoad(backgroundTexture, ivec2(agent.position)).r;
-    if(abs(is_valid_position - 0.87058823529) > 0.001) {
+    if(abs(is_valid_position - 0.87058823529) > 0.001 || agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
         agent.angle = rand * 2.0 * 3.1415;
         agent.position = oldPosition;
     }
-
-    // if (agent.position.x < 0.0 || agent.position.x >= imageSize.x || agent.position.y < 0.0 || agent.position.y >= imageSize.y) {
-    //     agent.angle = rand * 2.0 * 3.1415;
-    //     agent.position.x = min(imageSize.x - 1, max(0, agent.position.x));
-    //     agent.position.y = min(imageSize.y - 1, max(0, agent.position.y));
-    // }
 
     ssbo.agents[index] = agent;
 

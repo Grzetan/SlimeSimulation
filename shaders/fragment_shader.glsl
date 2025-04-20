@@ -9,17 +9,19 @@ uniform sampler2D inputTexture;
 void main() {
     ivec2 texSize = imageSize(backgroundTexture);
     ivec2 pixelCoord = ivec2(fragTexCoord * texSize);
-    pixelCoord = clamp(pixelCoord, ivec2(0), texSize - 1); 
+    pixelCoord = clamp(pixelCoord, ivec2(0), texSize - 1);
     vec4 texelValue = imageLoad(backgroundTexture, pixelCoord);
+
     if(abs(texelValue.r - 0.87058823529) < 0.00001){
-        outColor = vec4(1.0, 0.0, 0.0, 1.0);
         vec4 color = texture(inputTexture, fragTexCoord);
-        if(color == vec4(1.0)){
-            outColor = vec4(1.0 - color.x, 1.0 - color.y, 1.0 - color.z, 1.0); // can change to other color to visualize agents
+        outColor = vec4(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, 1.0);
+    } else {
+        vec4 calculatedColor;
+        if(texelValue.r > 0.4){
+            calculatedColor = vec4(0.0, 0.0, 0.0, 1.0);
         } else {
-            outColor = vec4(1.0 - color.x, 1.0 - color.y, 1.0 - color.z, 1.0);
+            calculatedColor = vec4(texelValue.r, texelValue.r, texelValue.r, 1.0);
         }
-    }else{
-        outColor = vec4(1.0 - texelValue.r, 1.0 - texelValue.r, 1.0 - texelValue.r, 1.0);
+        outColor = vec4(calculatedColor.rgb * step(calculatedColor.rgb, vec3(0.5)), 1.0);
     }
 }

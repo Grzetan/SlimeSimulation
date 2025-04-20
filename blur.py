@@ -82,27 +82,44 @@ def fill_uniforms(
     return {"ssboSize": ssbo_size_location, "time": time_location}
 
 
-def create_agents(background):
-    agent_size = 60000
+def create_agents(background, placement="circle"):
+    agent_size = 300000
     agents = np.zeros((agent_size, 4), dtype=np.float32)
 
-    # Get indices of non-black pixels (background != 0)
+    # Get indices of non-black pixels (background == 222)
     non_black_y, non_black_x = np.where(background == 222)
     if len(non_black_x) == 0:
-        raise ValueError("No non-black pixels found in the background mask.")
+        raise ValueError("No pixels with value 222 found in the background mask.")
 
-    # Combine coordinates (x, y)
-    positions = np.stack((non_black_x, non_black_y), axis=-1)
+    if placement == "random":
+        # Combine coordinates (x, y)
+        positions = np.stack((non_black_x, non_black_y), axis=-1)
 
-    # Randomly sample positions for each agent
-    indices = np.random.choice(len(positions), agent_size, replace=True)
-    sampled_positions = positions[indices]
+        # Randomly sample positions for each agent
+        indices = np.random.choice(len(positions), agent_size, replace=True)
+        sampled_positions = positions[indices]
 
-    agents[:, 0] = sampled_positions[:, 0]  # x-coordinate
-    agents[:, 1] = sampled_positions[:, 1]  # y-coordinate
-    agents[:, 2] = np.random.uniform(0, 2 * np.pi, agent_size)  # random angle
+        agents[:, 0] = sampled_positions[:, 0]  # x-coordinate
+        agents[:, 1] = sampled_positions[:, 1]  # y-coordinate
+        agents[:, 2] = np.random.uniform(0, 2 * np.pi, agent_size)  # random angle
 
-    # The fourth column remains zero or can be used for other properties
+    elif placement == "circle":
+        center_x = np.mean(non_black_x)
+        center_y = np.mean(non_black_y)
+        radius = 30.0
+
+        theta = np.random.uniform(0, 2 * np.pi, agent_size)
+        r = radius * np.sqrt(np.random.uniform(0, 1, agent_size))
+
+        agents[:, 0] = center_x + r * np.cos(theta)
+        agents[:, 1] = center_y + r * np.sin(theta)
+        agents[:, 2] = theta
+
+    else:
+        raise ValueError(
+            f"Invalid placement option: {placement}. Choose 'random' or 'circle'."
+        )
+
     return agents
 
 
